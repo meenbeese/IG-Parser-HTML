@@ -86,58 +86,55 @@ function promptUser() {
   });
 
   rl.question(
-    "\nEnter the path to the followers HTML file: ",
-    (followersFile) => {
-      if (!fs.existsSync(followersFile.trim())) {
-        console.error("\nThe specified followers file does not exist.");
+    "\nEnter the directory where 'followers.html' and 'following.html' are located (default is '/test'): ",
+    (directory) => {
+      const inputDir = path.resolve(directory.trim() || "/test");
+      const followersFilePath = path.join(inputDir, "followers.html");
+      const followingFilePath = path.join(inputDir, "following.html");
+
+      if (!fs.existsSync(followersFilePath)) {
+        console.error(`\nThe file '${followersFilePath}' does not exist.`);
         rl.close();
         return;
       }
 
+      if (!fs.existsSync(followingFilePath)) {
+        console.error(`\nThe file '${followingFilePath}' does not exist.`);
+        rl.close();
+        return;
+      }
+
+      const followers = parseHtmlFile(followersFilePath);
+      const following = parseHtmlFile(followingFilePath);
+      const { notFollowingBack, notFollowedBack, mutual } = compareLists(
+        followers,
+        following,
+      );
+
       rl.question(
-        "\nEnter the path to the following HTML file: ",
-        (followingFile) => {
-          if (!fs.existsSync(followingFile.trim())) {
-            console.error("\nThe specified following file does not exist.");
-            rl.close();
-            return;
+        "\nChoose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3, or 0 to skip): ",
+        (choice) => {
+          switch (choice.trim()) {
+            case "1":
+              console.log(
+                "\n" + formatList("Not following you back", notFollowingBack),
+              );
+              break;
+            case "2":
+              console.log(
+                "\n" + formatList("You're not following back", notFollowedBack),
+              );
+              break;
+            case "3":
+              console.log("\n" + formatList("Mutual followers", mutual));
+              break;
+            case "0":
+              break;
+            default:
+              console.error("\nInvalid choice.");
           }
 
-          const followers = parseHtmlFile(followersFile.trim());
-          const following = parseHtmlFile(followingFile.trim());
-          const { notFollowingBack, notFollowedBack, mutual } = compareLists(
-            followers,
-            following,
-          );
-
-          rl.question(
-            "\nChoose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3, or 0 to skip): ",
-            (choice) => {
-              switch (choice.trim()) {
-                case "1":
-                  console.log(
-                    "\n" +
-                      formatList("Not following you back", notFollowingBack),
-                  );
-                  break;
-                case "2":
-                  console.log(
-                    "\n" +
-                      formatList("You're not following back", notFollowedBack),
-                  );
-                  break;
-                case "3":
-                  console.log("\n" + formatList("Mutual followers", mutual));
-                  break;
-                case "0":
-                  break;
-                default:
-                  console.error("\nInvalid choice.");
-              }
-
-              exportAllPrompt(rl, followers, following);
-            },
-          );
+          exportAllPrompt(rl, followers, following);
         },
       );
     },
