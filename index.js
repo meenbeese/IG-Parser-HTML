@@ -34,6 +34,18 @@ function saveJsonToFile(data, outputPath) {
   console.log(`Saved to: ${outputPath}`);
 }
 
+function formatList(title, list) {
+  if (list.length === 0) {
+    return `${title}: None`;
+  }
+
+  const formattedList = list
+    .map((username, index) => `${index + 1}. ${username}`)
+    .join("\n");
+
+  return `${title}:\n${formattedList}`;
+}
+
 function exportAllPrompt(rl, followers, following) {
   rl.question(
     "\nWould you like to export all followers and following as JSON? (y/n): ",
@@ -97,20 +109,17 @@ function promptUser() {
             (choice) => {
               switch (choice.trim()) {
                 case "1":
-                  console.log("Not following you back:");
                   console.log(
-                    notFollowingBack.length ? notFollowingBack : "None",
+                    formatList("Not following you back", notFollowingBack),
                   );
                   break;
                 case "2":
-                  console.log("You're not following back:");
                   console.log(
-                    notFollowedBack.length ? notFollowedBack : "None",
+                    formatList("You're not following back", notFollowedBack),
                   );
                   break;
                 case "3":
-                  console.log("Mutual followers:");
-                  console.log(mutual.length ? mutual : "None");
+                  console.log(formatList("Mutual followers", mutual));
                   break;
                 default:
                   console.error("Invalid choice.");
