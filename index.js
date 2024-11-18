@@ -20,6 +20,8 @@ function parseHtmlFile(htmlFile, outputFile) {
       }
     });
 
+    entries.sort((a, b) => a.username.localeCompare(b.username));
+
     fs.writeFileSync(outputFile, JSON.stringify(entries, null, 4), "utf8");
 
     console.log(
