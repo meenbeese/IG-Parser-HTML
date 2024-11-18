@@ -1,6 +1,7 @@
 const fs = require("fs");
 const cheerio = require("cheerio");
 const readline = require("readline");
+const path = require("path");
 
 function parseHtmlFile(htmlFile) {
   const selector = ".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder";
@@ -26,6 +27,38 @@ function compareLists(followers, following) {
   const mutual = followers.filter((user) => following.includes(user));
 
   return { notFollowingBack, notFollowedBack, mutual };
+}
+
+function saveJsonToFile(data, outputPath) {
+  fs.writeFileSync(outputPath, JSON.stringify(data, null, 4), "utf8");
+  console.log(`Saved to: ${outputPath}`);
+}
+
+function exportAllPrompt(rl, followers, following) {
+  rl.question(
+    "\nWould you like to export all followers and following as JSON? (y/n): ",
+    (answer) => {
+      if (answer.trim().toLowerCase() === "y") {
+        rl.question("Enter the directory to save JSON files: ", (directory) => {
+          const outputDir = path.resolve(directory.trim());
+          if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
+
+          const followersPath = path.join(outputDir, "followers.json");
+          const followingPath = path.join(outputDir, "following.json");
+
+          saveJsonToFile(followers, followersPath);
+          saveJsonToFile(following, followingPath);
+
+          rl.close();
+        });
+      } else {
+        console.log("Skipping export. Exiting.");
+        rl.close();
+      }
+    },
+  );
 }
 
 function promptUser() {
@@ -83,18 +116,13 @@ function promptUser() {
                   console.error("Invalid choice.");
               }
 
-              rl.close();
+              exportAllPrompt(rl, followers, following);
             },
           );
         },
       );
     },
   );
-
-  rl.on("close", () => {
-    console.log("Process completed. Exiting.");
-    process.exit(0);
-  });
 }
 
 promptUser();
