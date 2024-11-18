@@ -111,7 +111,7 @@ function promptUser() {
           );
 
           rl.question(
-            "\nChoose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3): ",
+            "\nChoose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3, or 0 to skip): ",
             (choice) => {
               switch (choice.trim()) {
                 case "1":
@@ -128,6 +128,8 @@ function promptUser() {
                   break;
                 case "3":
                   console.log("\n" + formatList("Mutual followers", mutual));
+                  break;
+                case "0":
                   break;
                 default:
                   console.error("\nInvalid choice.");
