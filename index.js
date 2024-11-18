@@ -2,34 +2,30 @@ const fs = require("fs");
 const cheerio = require("cheerio");
 const readline = require("readline");
 
-function parseHtmlFile(htmlFile, outputFile) {
-  try {
-    const selector = ".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder";
-    const html = fs.readFileSync(htmlFile, "utf-8");
-    const $ = cheerio.load(html);
-    const entries = [];
+function parseHtmlFile(htmlFile) {
+  const selector = ".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder";
+  const html = fs.readFileSync(htmlFile, "utf-8");
+  const $ = cheerio.load(html);
+  const entries = [];
 
-    $(selector).each((_, element) => {
-      try {
-        const username = $(element).find("a").text().trim();
-        const date = $(element).find("div").last().text().trim();
+  $(selector).each((_, element) => {
+    try {
+      const username = $(element).find("a").text().trim();
+      entries.push(username);
+    } catch (error) {
+      console.error("Error parsing an entry:", error);
+    }
+  });
 
-        entries.push({ username, date });
-      } catch (error) {
-        console.error("Error parsing an entry:", error);
-      }
-    });
+  return entries.sort();
+}
 
-    entries.sort((a, b) => a.username.localeCompare(b.username));
+function compareLists(followers, following) {
+  const notFollowingBack = following.filter((user) => !followers.includes(user));
+  const notFollowedBack = followers.filter((user) => !following.includes(user));
+  const mutual = followers.filter((user) => following.includes(user));
 
-    fs.writeFileSync(outputFile, JSON.stringify(entries, null, 4), "utf8");
-
-    console.log(
-      `Successfully parsed ${entries.length} entries and saved to ${outputFile}`,
-    );
-  } catch (error) {
-    console.error("An error occurred:", error);
-  }
+  return { notFollowingBack, notFollowedBack, mutual };
 }
 
 function promptUser() {
@@ -38,43 +34,60 @@ function promptUser() {
     output: process.stdout,
   });
 
-  let type, htmlFilePath, outputJsonPath;
-
   rl.question(
-    "Do you want to parse 'followers' or 'following'? ",
-    (answer1) => {
-      type = answer1.trim().toLowerCase();
-      if (type !== "followers" && type !== "following") {
-        console.error(
-          "Invalid choice. Please choose 'followers' or 'following'.",
-        );
+    "Enter the path to the followers HTML file: ",
+    (followersFile) => {
+      if (!fs.existsSync(followersFile.trim())) {
+        console.error("The specified followers file does not exist.");
         rl.close();
         return;
       }
 
-      rl.question("Enter the path to the HTML file to parse: ", (answer2) => {
-        htmlFilePath = answer2.trim();
-        if (!fs.existsSync(htmlFilePath)) {
-          console.error("The specified file does not exist.");
-          rl.close();
-          return;
-        }
+      rl.question(
+        "Enter the path to the following HTML file: ",
+        (followingFile) => {
+          if (!fs.existsSync(followingFile.trim())) {
+            console.error("The specified following file does not exist.");
+            rl.close();
+            return;
+          }
 
-        rl.question(
-          "Enter the path to save the output JSON file: ",
-          (answer3) => {
-            outputJsonPath = answer3.trim();
+          const followers = parseHtmlFile(followersFile.trim());
+          const following = parseHtmlFile(followingFile.trim());
+          const { notFollowingBack, notFollowedBack, mutual } = compareLists(
+            followers,
+            following,
+          );
 
-            try {
-              parseHtmlFile(htmlFilePath, outputJsonPath);
-            } catch (error) {
-              console.error("An error occurred:", error);
-            } finally {
+          rl.question(
+            "Choose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3): ",
+            (choice) => {
+              switch (choice.trim()) {
+                case "1":
+                  console.log("Not following you back:");
+                  console.log(
+                    notFollowingBack.length ? notFollowingBack : "None",
+                  );
+                  break;
+                case "2":
+                  console.log("You're not following back:");
+                  console.log(
+                    notFollowedBack.length ? notFollowedBack : "None",
+                  );
+                  break;
+                case "3":
+                  console.log("Mutual followers:");
+                  console.log(mutual.length ? mutual : "None");
+                  break;
+                default:
+                  console.error("Invalid choice.");
+              }
+
               rl.close();
-            }
-          },
-        );
-      });
+            },
+          );
+        },
+      );
     },
   );
 
