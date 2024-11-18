@@ -4,6 +4,7 @@ const readline = require("readline");
 const path = require("path");
 
 function parseHtmlFile(htmlFile) {
+  // The div class name that Instagram internally uses for entries
   const selector = ".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder";
   const html = fs.readFileSync(htmlFile, "utf-8");
   const $ = cheerio.load(html);
@@ -22,7 +23,9 @@ function parseHtmlFile(htmlFile) {
 }
 
 function compareLists(followers, following) {
-  const notFollowingBack = following.filter((user) => !followers.includes(user));
+  const notFollowingBack = following.filter(
+    (user) => !followers.includes(user),
+  );
   const notFollowedBack = followers.filter((user) => !following.includes(user));
   const mutual = followers.filter((user) => following.includes(user));
 
@@ -51,22 +54,25 @@ function exportAllPrompt(rl, followers, following) {
     "\nWould you like to export all followers and following as JSON? (y/n): ",
     (answer) => {
       if (answer.trim().toLowerCase() === "y") {
-        rl.question("Enter the directory to save JSON files: ", (directory) => {
-          const outputDir = path.resolve(directory.trim());
-          if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-          }
+        rl.question(
+          "\nEnter the directory to save JSON files: ",
+          (directory) => {
+            const outputDir = path.resolve(directory.trim());
+            if (!fs.existsSync(outputDir)) {
+              fs.mkdirSync(outputDir, { recursive: true });
+            }
 
-          const followersPath = path.join(outputDir, "followers.json");
-          const followingPath = path.join(outputDir, "following.json");
+            const followersPath = path.join(outputDir, "followers.json");
+            const followingPath = path.join(outputDir, "following.json");
 
-          saveJsonToFile(followers, followersPath);
-          saveJsonToFile(following, followingPath);
+            saveJsonToFile(followers, followersPath);
+            saveJsonToFile(following, followingPath);
 
-          rl.close();
-        });
+            rl.close();
+          },
+        );
       } else {
-        console.log("Skipping export. Exiting.");
+        console.log("\nSkipping export. Exiting.");
         rl.close();
       }
     },
@@ -80,19 +86,19 @@ function promptUser() {
   });
 
   rl.question(
-    "Enter the path to the followers HTML file: ",
+    "\nEnter the path to the followers HTML file: ",
     (followersFile) => {
       if (!fs.existsSync(followersFile.trim())) {
-        console.error("The specified followers file does not exist.");
+        console.error("\nThe specified followers file does not exist.");
         rl.close();
         return;
       }
 
       rl.question(
-        "Enter the path to the following HTML file: ",
+        "\nEnter the path to the following HTML file: ",
         (followingFile) => {
           if (!fs.existsSync(followingFile.trim())) {
-            console.error("The specified following file does not exist.");
+            console.error("\nThe specified following file does not exist.");
             rl.close();
             return;
           }
@@ -105,24 +111,26 @@ function promptUser() {
           );
 
           rl.question(
-            "Choose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3): ",
+            "\nChoose an option:\n1. See who you're following but not being followed back by.\n2. See who is following you but you're not following back.\n3. See mutual followers.\nEnter your choice (1, 2, 3): ",
             (choice) => {
               switch (choice.trim()) {
                 case "1":
                   console.log(
-                    formatList("Not following you back", notFollowingBack),
+                    "\n" +
+                      formatList("Not following you back", notFollowingBack),
                   );
                   break;
                 case "2":
                   console.log(
-                    formatList("You're not following back", notFollowedBack),
+                    "\n" +
+                      formatList("You're not following back", notFollowedBack),
                   );
                   break;
                 case "3":
-                  console.log(formatList("Mutual followers", mutual));
+                  console.log("\n" + formatList("Mutual followers", mutual));
                   break;
                 default:
-                  console.error("Invalid choice.");
+                  console.error("\nInvalid choice.");
               }
 
               exportAllPrompt(rl, followers, following);
