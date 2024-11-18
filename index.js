@@ -55,9 +55,9 @@ function exportAllPrompt(rl, followers, following) {
     (answer) => {
       if (answer.trim().toLowerCase() === "y") {
         rl.question(
-          "\nEnter the directory to save JSON files: ",
+          "\nEnter the directory to save JSON files (default is 'dump/'): ",
           (directory) => {
-            const outputDir = path.resolve(directory.trim());
+            const outputDir = path.resolve(directory.trim() || "dump");
             if (!fs.existsSync(outputDir)) {
               fs.mkdirSync(outputDir, { recursive: true });
             }
