@@ -57,7 +57,10 @@ function exportAllPrompt(rl, followers, following) {
         rl.question(
           "\nEnter the directory to save JSON files (default is 'dump/'): ",
           (directory) => {
-            const outputDir = path.resolve(directory.trim() || "dump");
+            const outputDir = path.resolve(
+              process.cwd(),
+              directory.trim() || "dump",
+            );
             if (!fs.existsSync(outputDir)) {
               fs.mkdirSync(outputDir, { recursive: true });
             }
@@ -88,7 +91,10 @@ function promptUser() {
   rl.question(
     "\nEnter the directory where 'followers.html' and 'following.html' are located (default is '/test'): ",
     (directory) => {
-      const inputDir = path.resolve(directory.trim() || "/test");
+      const inputDir = path.resolve(
+        process.cwd(),
+        directory.trim() || "./test",
+      );
       const followersFilePath = path.join(inputDir, "followers.html");
       const followingFilePath = path.join(inputDir, "following.html");
 
