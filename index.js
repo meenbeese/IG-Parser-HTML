@@ -1,27 +1,28 @@
 const fs = require("fs");
 const cheerio = require("cheerio");
 
-function parseFollowers(htmlFile, outputFile) {
+function parseHtmlFile(htmlFile, outputFile) {
   try {
+    const selector = ".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder";
     const html = fs.readFileSync(htmlFile, "utf-8");
     const $ = cheerio.load(html);
-    const followers = [];
+    const entries = [];
 
-    $(".pam._3-95._2ph-._a6-g.uiBoxWhite.noborder").each((_, element) => {
+    $(selector).each((_, element) => {
       try {
         const username = $(element).find("a").text().trim();
         const date = $(element).find("div").last().text().trim();
 
-        followers.push({ username, date });
+        entries.push({ username, date });
       } catch (error) {
-        console.error("Error parsing a follower entry:", error);
+        console.error("Error parsing an entry:", error);
       }
     });
 
-    fs.writeFileSync(outputFile, JSON.stringify(followers, null, 4), "utf8");
+    fs.writeFileSync(outputFile, JSON.stringify(entries, null, 4), "utf8");
 
     console.log(
-      `Successfully parsed ${followers.length} followers and saved to ${outputFile}`,
+      `Successfully parsed ${entries.length} entries and saved to ${outputFile}`,
     );
   } catch (error) {
     console.error("An error occurred:", error);
@@ -30,4 +31,4 @@ function parseFollowers(htmlFile, outputFile) {
 
 const htmlFilePath = "following.html";
 const outputJsonPath = "following.json";
-parseFollowers(htmlFilePath, outputJsonPath);
+parseHtmlFile(htmlFilePath, outputJsonPath);
